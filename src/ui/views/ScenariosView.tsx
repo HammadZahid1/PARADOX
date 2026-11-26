@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Binary, Plus } from 'lucide-react';
 import { useParadox } from '@/state/store';
 import { Badge } from '@/ui/components/Badge';
@@ -5,6 +6,7 @@ import { Button } from '@/ui/components/Button';
 import { EmptyState } from '@/ui/components/EmptyState';
 import { MetricCard } from '@/ui/components/MetricCard';
 import { Panel } from '@/ui/components/Panel';
+import { ScenarioFilter } from '@/ui/components/ScenarioFilter';
 import { SectionHeader } from '@/ui/components/SectionHeader';
 
 function MetadataRow({ label, value }: { label: string; value: string }) {
@@ -21,6 +23,27 @@ export function ScenariosView() {
   const workspace = useParadox((state) => state.workspace);
   const loadScenario = useParadox((state) => state.loadScenario);
   const openModal = useParadox((state) => state.openModal);
+  const [query, setQuery] = useState('');
+  const [domain, setDomain] = useState('all');
+
+  const domains = useMemo(
+    () => [...new Set(scenarios.map((scenario) => scenario.domain))].sort(),
+    [scenarios],
+  );
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return scenarios.filter((scenario) => {
+      if (domain !== 'all' && scenario.domain !== domain) return false;
+      if (!needle) return true;
+      return [scenario.name, scenario.id, scenario.description, ...scenario.tags]
+        .some((value) => value.toLowerCase().includes(needle));
+    });
+  }, [scenarios, domain, query]);
+  const clearFilters = (
+    <Button variant="ghost" onClick={() => { setQuery(''); setDomain('all'); }}>
+      Clear filters
+    </Button>
+  );
 
   const newScenario = (
     <Button icon={<Plus size={13} />} variant="solid" onClick={() => openModal({ kind: 'newScenario' })}>
@@ -43,8 +66,25 @@ export function ScenariosView() {
           action={newScenario}
         />
       ) : (
+        <>
+          <ScenarioFilter
+            query={query}
+            domain={domain}
+            domains={domains}
+            resultCount={filtered.length}
+            totalCount={scenarios.length}
+            onQueryChange={setQuery}
+            onDomainChange={setDomain}
+          />
+          {filtered.length === 0 ? (
+            <EmptyState
+              title="No scenarios match filters"
+              description="Try a different name, id, tag or domain to find a bundled scenario."
+              action={clearFilters}
+            />
+          ) : (
         <div className="grid min-h-0 flex-1 content-start gap-3 overflow-auto xl:grid-cols-2">
-          {scenarios.map((scenario) => {
+          {filtered.map((scenario) => {
             const active = workspace.activeScenarioId === scenario.id;
             const config = scenario.configuration;
             return (
@@ -96,6 +136,8 @@ export function ScenariosView() {
             );
           })}
         </div>
+          )}
+        </>
       )}
     </div>
   );
