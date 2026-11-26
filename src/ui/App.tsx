@@ -9,6 +9,7 @@ import { StatusBar } from '@/ui/components/StatusBar';
 import { Toasts } from '@/ui/components/Toasts';
 import { TopBar } from '@/ui/components/TopBar';
 import { useKeyboardShortcuts } from '@/ui/hooks/useKeyboardShortcuts';
+import { usePersistence } from '@/ui/hooks/usePersistence';
 import { usePlayback } from '@/ui/hooks/usePlayback';
 import { ModalHost } from '@/ui/modals/ModalHost';
 import { ViewRouter } from '@/ui/ViewRouter';
@@ -19,6 +20,7 @@ export function App() {
   const scenarioCount = useParadox((state) => state.scenarios.length);
   usePlayback();
   useKeyboardShortcuts();
+  usePersistence();
 
   useEffect(() => {
     if (scenarioCount === 0) bootstrap(createAllPresets());
