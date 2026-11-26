@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { EntityId, Scenario, SimulationEvent, Workspace } from '@/engine/types';
 import { SimulationEngine } from '@/engine/simulation/engine';
+import type { AppSettings } from '@/persistence/settings';
 import { createId } from '@/utils/id';
 import type { ModalState, PanelId, SelectionState, ToastMessage, ViewId } from './types';
 
@@ -23,8 +24,12 @@ interface ParadoxStore {
   toasts: ToastMessage[];
   reducedMotion: boolean;
   showGrid: boolean;
+  compactMode: boolean;
+  theme: string;
 
   bootstrap: (scenarios: Scenario[]) => void;
+  applySettings: (settings: Partial<AppSettings>) => void;
+  importScenarios: (scenarios: Scenario[], activateFirst?: boolean) => void;
   loadScenario: (id: EntityId) => void;
   registerScenarios: (scenarios: Scenario[]) => void;
   setEngine: (engine: SimulationEngine) => void;
@@ -43,6 +48,7 @@ interface ParadoxStore {
   selectBranch: (id: EntityId) => void;
   captureSnapshot: (name: string) => void;
   restoreSnapshot: (id: EntityId) => void;
+  deleteSnapshot: (id: EntityId) => void;
   setView: (view: ViewId) => void;
   togglePanel: (panel: PanelId) => void;
   setPanelSize: (panel: PanelId, size: number) => void;
@@ -89,7 +95,43 @@ export const useParadox = create<ParadoxStore>((set, get) => ({
   toasts: [],
   reducedMotion: false,
   showGrid: true,
+  compactMode: false,
+  theme: 'void',
 
+  applySettings: (settings) => set((state) => {
+    const panelSizes = { ...state.panelSizes };
+    if (settings.panelSizes) {
+      for (const [key, value] of Object.entries(settings.panelSizes)) {
+        if (key in panelSizes && Number.isFinite(value)) panelSizes[key as PanelId] = value;
+      }
+    }
+    const reducedMotion = settings.reducedMotion ?? state.reducedMotion;
+    const showGrid = settings.showGrid ?? state.showGrid;
+    const compactMode = settings.compactMode ?? state.compactMode;
+    const theme = settings.theme ?? state.theme;
+    return {
+      reducedMotion, showGrid, compactMode, theme, panelSizes,
+      workspace: {
+        ...state.workspace,
+        settings: {
+          ...state.workspace.settings,
+          reducedMotion, showGrid, compactMode,
+          theme: theme === 'graphite' ? 'graphite' : 'void',
+          defaultView: settings.defaultView ?? state.workspace.settings.defaultView,
+          panelSizes: { ...state.workspace.settings.panelSizes, ...(settings.panelSizes ?? {}) },
+        },
+        updatedAt: Date.now(),
+      },
+    };
+  }),
+  importScenarios: (scenarios, activateFirst = true) => {
+    const state = get();
+    const known = new Set(state.scenarios.map((item) => item.id));
+    const fresh = scenarios.filter((item) => !known.has(item.id));
+    set({ scenarios: [...state.scenarios, ...fresh], revision: state.revision + 1 });
+    const first = fresh[0] ?? scenarios[0];
+    if (activateFirst && first) get().loadScenario(first.id);
+  },
   bootstrap: (scenarios) => {
     const workspace = get().workspace;
     const scenario = scenarios[0];
@@ -177,9 +219,14 @@ export const useParadox = create<ParadoxStore>((set, get) => ({
     get().pushToast(`Snapshot saved: ${name}`, 'success');
   },
   restoreSnapshot: (id) => {
-    get().engine?.restoreSnapshot(id);
+    const restored = get().engine?.restoreSnapshot(id) ?? false;
     set((state) => ({ revision: state.revision + 1 }));
-    get().pushToast('Snapshot restored', 'success');
+    get().pushToast(restored ? 'Snapshot restored' : 'Snapshot not found', restored ? 'success' : 'warning');
+  },
+  deleteSnapshot: (id) => {
+    const deleted = get().engine?.deleteSnapshot(id) ?? false;
+    set((state) => ({ revision: state.revision + 1 }));
+    if (deleted) get().pushToast('Snapshot deleted', 'info');
   },
   setView: (view) => set({ view }),
   togglePanel: (panel) => set((state) => ({ panels: { ...state.panels, [panel]: !state.panels[panel] } })),
