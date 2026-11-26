@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createAllPresets } from '@/engine/scenarios';
+import { createAllLibraryPresets } from '@/engine/scenarios/library';
 import { useParadox } from '@/state/store';
 import { CommandPalette } from '@/ui/components/CommandPalette';
 import { ErrorBoundary } from '@/ui/components/ErrorBoundary';
@@ -23,7 +23,7 @@ export function App() {
   usePersistence();
 
   useEffect(() => {
-    if (scenarioCount === 0) bootstrap(createAllPresets());
+    if (scenarioCount === 0) bootstrap(createAllLibraryPresets());
   }, [bootstrap, scenarioCount]);
 
   return (
