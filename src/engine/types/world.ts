@@ -1,4 +1,5 @@
 import type { EntityId, ScalarValue, VariableChange, VariableDefinition } from './core';
+import type { EventEffect } from './events';
 
 export interface ActiveEventInstance {
   instanceId: EntityId;
@@ -10,6 +11,8 @@ export interface ActiveEventInstance {
   remainingSteps?: number;
   severity: string;
   source: 'scheduled' | 'conditional' | 'random' | 'manual' | 'cascade' | 'recurring';
+  temporaryEffect?: EventEffect;
+  revertAtStep?: number;
 }
 
 export interface EventRecord {
