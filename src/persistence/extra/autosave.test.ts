@@ -7,7 +7,7 @@ describe('autosave scheduler', () => {
 
   it('debounces repeated writes to the same key', () => {
     const saved: Array<[string, string]> = [];
-    const scheduler = createAutosaveScheduler(200, (key, value) => saved.push([key, value]));
+    const scheduler = createAutosaveScheduler<string>(200, (key, value) => saved.push([key, value]));
     scheduler.schedule('a', 'first');
     scheduler.schedule('a', 'second');
     vi.advanceTimersByTime(250);
