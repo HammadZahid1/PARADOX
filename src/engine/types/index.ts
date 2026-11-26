@@ -6,3 +6,4 @@ export * from './timeline';
 export * from './reality';
 export * from './scenario';
 export * from './results';
+export * from './workspace';
