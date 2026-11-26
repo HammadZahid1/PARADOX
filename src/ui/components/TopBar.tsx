@@ -1,4 +1,4 @@
-import { Command, Menu, Pause, Play, RotateCcw, SkipForward } from 'lucide-react';
+import { Command, Download, Menu, Pause, Play, RotateCcw, SkipForward, Upload } from 'lucide-react';
 import { useParadox } from '@/state/store';
 import { Button } from './Button';
 import { Tooltip } from './Tooltip';
@@ -12,6 +12,8 @@ export function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const stepForward = useParadox((state) => state.stepForward);
   const reset = useParadox((state) => state.reset);
   const setCommandOpen = useParadox((state) => state.setCommandOpen);
+  const openModal = useParadox((state) => state.openModal);
+  const setSearchOpen = useParadox((state) => state.setSearchOpen);
   const step = engine?.activeBranch.currentState.step ?? 0;
   const status = engine?.activeBranch.status ?? 'idle';
 
@@ -28,6 +30,9 @@ export function TopBar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         <span className="hidden font-mono text-[10px] uppercase tracking-wider text-muted md:inline">{view}</span>
         <span className="border border-line px-2 py-1 font-mono text-[10px] text-cyan">STEP {String(step).padStart(3, '0')}</span>
         <span className="hidden font-mono text-[10px] uppercase text-muted lg:inline">{status}</span>
+        <Tooltip label="Search workspace"><Button onClick={() => setSearchOpen(true)} aria-label="Search workspace"><span className="font-mono text-xs">/</span></Button></Tooltip>
+        <Tooltip label="Import local data"><Button onClick={() => openModal({ kind: 'import' })} aria-label="Import local data"><Upload size={14} /></Button></Tooltip>
+        <Tooltip label="Export local data"><Button onClick={() => openModal({ kind: 'export' })} aria-label="Export local data"><Download size={14} /></Button></Tooltip>
         <Tooltip label="Step forward"><Button onClick={stepForward} disabled={!engine} aria-label="Step forward"><SkipForward size={14} /></Button></Tooltip>
         <Tooltip label={isPlaying ? 'Pause' : 'Play'}>
           <Button onClick={isPlaying ? pause : play} disabled={!engine} variant="solid" aria-label={isPlaying ? 'Pause simulation' : 'Play simulation'}>
