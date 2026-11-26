@@ -1,5 +1,5 @@
 import type { EntityId, ScalarValue, SimulationConfiguration } from './core';
-import type { Condition, EventEffect, SimulationEvent } from './events';
+import type { Condition, SimulationEvent } from './events';
 import type { CausalGraph } from './causal';
 import type { VariableDefinition } from './core';
 
