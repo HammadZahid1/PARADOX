@@ -31,7 +31,7 @@ export function SnapshotsView() {
   const selectBranch = useParadox((state) => state.selectBranch);
   const openModal = useParadox((state) => state.openModal);
   const restoreSnapshot = useParadox((state) => state.restoreSnapshot);
-  const pushToast = useParadox((state) => state.pushToast);
+  const deleteSnapshot = useParadox((state) => state.deleteSnapshot);
   const [filter, setFilter] = useState<SnapshotFilter>('all');
 
   const allSnapshots = engine?.snapshotsList ?? [];
@@ -53,14 +53,8 @@ export function SnapshotsView() {
   };
 
   const handleDelete = (snapshot: TimelineSnapshot): void => {
-    const deleted = engine.deleteSnapshot(snapshot.id);
-    if (!deleted) {
-      pushToast('Snapshot could not be deleted', 'warning');
-      return;
-    }
+    deleteSnapshot(snapshot.id);
     if (selection.snapshotId === snapshot.id) setSelection({ snapshotId: undefined });
-    useParadox.setState((state) => ({ revision: state.revision + 1 }));
-    pushToast(`Deleted snapshot: ${snapshot.name}`, 'success');
   };
 
   const renderList = (snapshots: TimelineSnapshot[]) => {
