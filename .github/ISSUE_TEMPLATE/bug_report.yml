@@ -1,0 +1,80 @@
+name: Bug report
+description: Report reproducible incorrect behavior in PARADOX.
+title: '[Bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PARADOX is browser-only and local-first. Do not include secrets, API keys, or private scenario data.
+        For seed, fingerprint, or replay defects, use the **Engine defect** template instead.
+
+  - type: input
+    id: area
+    attributes:
+      label: View or workflow
+      description: Name the view or file involved, for example `src/ui/views/LabView.tsx`.
+      placeholder: 'Lab / playback'
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the scenario id, seed, mode, and step where the problem appears.
+      placeholder: |
+        1. Load scenario `economy` (seed 1337, deterministic mode).
+        2. Press Space and run to step 20.
+        3. Open the Analytics view.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include any error text or toast message.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, and local build information.
+      placeholder: |
+        - OS:
+        - Browser and version:
+        - Node.js version (`node --version`):
+        - Commit or tag:
+        - Scenario id and seed:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output or screenshots
+      description: Paste local browser console messages or attach screenshots; redact private data.
+
+  - type: checkboxes
+    id: verification
+    attributes:
+      label: Verification
+      options:
+        - label: Reproduced on the current local build
+          required: true
+        - label: Ran `npm ci`, `npm run typecheck`, `npm test`, and `npm run build`
+          required: false
+        - label: Checked `docs/TROUBLESHOOTING.md` and the browser console
+          required: false
+        - label: Contains no secrets, credentials, or private data
+          required: true

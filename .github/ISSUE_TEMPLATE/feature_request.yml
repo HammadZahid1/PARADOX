@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a local-first improvement to PARADOX.
+title: '[Feature]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PARADOX is a browser-only prototype with simplified fictional scenarios. Proposals must not introduce
+        a backend, account, API key, telemetry endpoint, or external AI dependency.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or engine problem exists today? Point to the affected view or module when possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the change, including any new file, view, store action, or engine helper.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches were considered, and why were they rejected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable, testable outcomes.
+      placeholder: |
+        1. Given the same seed and inputs, two runs produce the same `stateFingerprint()`.
+        2. A new view is registered in `src/ui/ViewRouter.tsx` and documented in `docs/UI.md`.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints and verification
+      options:
+        - label: No network calls, secrets, accounts, or external services
+          required: true
+        - label: Scenario content remains fictional/educational, not a real-world forecast
+          required: true
+        - label: Verification includes `npm run typecheck`, `npm test`, and `npm run build`
+          required: false
+        - label: Documentation under `docs/` will be updated
+          required: false

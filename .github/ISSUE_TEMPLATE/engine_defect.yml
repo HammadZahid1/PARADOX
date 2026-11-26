@@ -1,0 +1,97 @@
+name: Engine defect
+description: Report a seed, RNG, fingerprint, replay, or branch-isolation defect.
+title: '[Engine]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compare states with `stateFingerprint()` from `src/engine/core/state.ts`, not raw JSON:
+        `createId()` and history timestamps use `Date.now()`/`Math.random()` (`src/utils/id.ts`).
+        See `docs/DETERMINISM.md` for seed derivation and replay semantics.
+
+  - type: input
+    id: seed
+    attributes:
+      label: Seed
+      description: Scenario `configuration.seed`; for Monte Carlo also record `baseSeed`.
+      placeholder: '1337'
+    validations:
+      required: true
+
+  - type: input
+    id: scenario-id
+    attributes:
+      label: Scenario id
+      description: Scenario id from `src/engine/scenarios/index.ts` or an imported custom scenario.
+      placeholder: 'economy'
+    validations:
+      required: true
+
+  - type: input
+    id: mode
+    attributes:
+      label: Simulation mode
+      description: `configuration.mode` from `src/engine/types/core.ts`.
+      placeholder: 'deterministic'
+    validations:
+      required: true
+
+  - type: input
+    id: steps
+    attributes:
+      label: Steps / replay window
+      description: Number of steps and the exact step where the defect first appears.
+      placeholder: 'Run 40 steps; mismatch at step 17'
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: List every input in order, including branch creation order, injected events, probability overrides, variable adjustments, and snapshot restores.
+      placeholder: |
+        1. Load scenario id `economy`, seed 1337, deterministic mode.
+        2. Run 10 steps, create branch "probe", inject event X at step 11.
+        3. Run 30 more steps and compare branch fingerprints.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fingerprint
+    attributes:
+      label: Observed and expected fingerprint
+      description: Paste `stateFingerprint()` strings or `stateChecksum()` values from `src/engine/determinism/checksum.ts`.
+      placeholder: |
+        Observed:  {"step":40,...}
+        Expected:  {"step":40,...}
+    validations:
+      required: true
+
+  - type: textarea
+    id: expectation
+    attributes:
+      label: Deterministic expectation
+      description: What must be identical for the same seed and inputs? Mention the relevant per-step or child-branch seed when known.
+    validations:
+      required: true
+
+  - type: textarea
+    id: replay
+    attributes:
+      label: Replay recording (optional)
+      description: Paste `recordReplay()` inputs from `src/engine/determinism/replay.ts` and `src/engine/determinism/inputs.ts`, or describe how to reproduce them.
+
+  - type: checkboxes
+    id: verification
+    attributes:
+      label: Determinism verification
+      options:
+        - label: Ran the same seed and inputs at least twice and compared fingerprints
+          required: true
+        - label: Mode is explicit (`deterministic` or `probabilistic`)
+          required: true
+        - label: Compared fingerprints, not raw objects with ids/timestamps
+          required: true
+        - label: Recorded branch creation order and any snapshot restores
+          required: false
