@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { WorldState } from '@/engine/types';
 import { createInitialState } from '@/engine/core/state';
-import { appendTimelineEntry, createTimeline } from '@/engine/timeline/timeline';
+import { appendTimelineEntry } from '@/engine/timeline/timeline';
 import { createSnapshot } from '@/engine/timeline/snapshots';
 import { branchAncestry, branchChildren, branchFromEvent, branchFromSnapshot, branchFromState, branchTree, createReality, renameBranch } from './branch';
 

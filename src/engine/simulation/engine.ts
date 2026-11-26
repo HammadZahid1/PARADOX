@@ -1,8 +1,8 @@
 import type {
-  CausalGraph, EntityId, EventRecord, HistoryEntry, RealityBranch,
+  CausalGraph, CausalPropagationStep, EntityId, HistoryEntry, RealityBranch,
   Scenario, SimulationEvent, TimelineSnapshot, VariableChange, VariableDefinition, WorldState,
 } from '@/engine/types';
-import { advanceClock, createInitialState } from '@/engine/core/state';
+import { advanceClock, cloneState, createInitialState } from '@/engine/core/state';
 import { applyRules } from '@/engine/core/rules';
 import { diffVariables, setVariable } from '@/engine/core/variables';
 import { SeededRandom } from '@/engine/random/rng';
@@ -32,6 +32,7 @@ export class SimulationEngine {
   private snapshots = new Map<EntityId, TimelineSnapshot>();
   private history: HistoryEntry[] = [];
   private logs: ConsoleEntry[] = [];
+  private states = new Map<string, WorldState>();
   private pending: PendingPropagation[] = [];
   private activatedQueue: EntityId[] = [];
   activeBranchId: EntityId;
@@ -47,6 +48,7 @@ export class SimulationEngine {
     const branch = createReality({ name: 'Prime Reality', state: initial, seed: scenario.configuration.seed, index: 0 });
     branch.status = 'idle';
     this.branches.set(branch.id, branch);
+    this.states.set(`${branch.id}:0`, initial);
     this.activeBranchId = branch.id;
     this.log('init', `Scenario initialized: ${scenario.name} (${scenario.variables.length} variables, ${scenario.events.length} events)`, 'notice');
     this.recordHistory('scenario', `Loaded scenario ${scenario.name}`);
@@ -78,6 +80,18 @@ export class SimulationEngine {
     return this.branches.get(id);
   }
 
+  /** Historical state at a step, falling back to the closest earlier checkpoint. */
+  getStateAt(branchId: EntityId, step: number): WorldState | undefined {
+    const exact = this.states.get(`${branchId}:${step}`);
+    if (exact) return exact;
+    const candidates = [...this.states.entries()]
+      .filter(([key]) => key.startsWith(`${branchId}:`))
+      .map(([key, value]) => ({ step: Number(key.split(':')[1]), value }))
+      .filter((item) => item.step <= step)
+      .sort((a, b) => b.step - a.step);
+    return candidates[0]?.value;
+  }
+
   selectBranch(id: EntityId): boolean {
     if (!this.branches.has(id)) return false;
     this.activeBranchId = id;
@@ -98,7 +112,7 @@ export class SimulationEngine {
     const eventResult = this.eventEngine.processStep(ruled.state, effectiveEvents, this.definitions, random, stepNumber, config.mode);
 
     let state = eventResult.state;
-    const propagated: VariableChange[] = [];
+    const propagated: CausalPropagationStep[] = [];
     const due = applyPendingPropagations(state, this.pending, state.step, this.causalGraph, this.definitions);
     state = due.state;
     this.pending = this.pending.filter((item) => item.dueStep > state.step);
@@ -110,11 +124,7 @@ export class SimulationEngine {
         const result = propagateChange(this.causalGraph, state, definition.key, change.to - change.from, this.definitions, config.propagationLimit);
         state = result.state;
         this.pending.push(...result.pending);
-        propagated.push(...result.steps.map((item) => ({
-          variableId: item.toNode, from: item.before, to: item.after,
-          step: state.step, time: state.time, source: 'causal',
-          reason: `${item.relation}:${item.edgeId}`,
-        })));
+        propagated.push(...result.steps);
       }
     }
     state = {
@@ -130,6 +140,7 @@ export class SimulationEngine {
     const timeline = appendTimelineEntry(branch.timeline, state, changes, eventResult.fired, checkpoint);
     const updated: RealityBranch = { ...branch, currentState: state, timeline, status: stepNumber >= config.maxSteps ? 'complete' : 'running' };
     this.branches.set(branch.id, updated);
+    this.states.set(`${branch.id}:${state.step}`, state);
 
     let snapshotId: string | undefined;
     if (checkpoint) snapshotId = this.captureSnapshot(`Automatic checkpoint ${state.step}`, 'auto').id;
@@ -238,12 +249,13 @@ export class SimulationEngine {
     if (fromSnapshotId) {
       const snapshot = this.snapshots.get(fromSnapshotId);
       if (!snapshot) return undefined;
-      baseState = restoreSnapshot(snapshot.state);
+      baseState = restoreSnapshot(snapshot);
     }
     const branch = branchFromState(parent, baseState, name, reason, eventId);
     branch.seed = (parent.seed + this.branches.size * 0x9e3779b9) >>> 0;
     branch.color = chooseBranchColor(this.branches.size);
     this.branches.set(branch.id, branch);
+    this.states.set(`${branch.id}:${baseState.step}`, cloneState(baseState));
     this.recordHistory('branch', `Created reality ${name}`, `from ${parent.name} at step ${baseState.step}`, baseState);
     this.log('branch', `Reality branch created: ${name}`, 'notice');
     return branch;
@@ -255,6 +267,8 @@ export class SimulationEngine {
     const prime = createReality({ name: 'Prime Reality', state: initial, seed: config.seed, index: 0 });
     this.branches = new Map([[prime.id, prime]]);
     this.snapshots.clear();
+    this.states.clear();
+    this.states.set(`${prime.id}:0`, initial);
     this.history = [];
     this.pending = [];
     this.activatedQueue = [];
