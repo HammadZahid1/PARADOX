@@ -84,7 +84,7 @@ Node/npm versions are not pinned by an `engines` field in `package.json`. The de
 
 ## Current tooling gaps
 
-There is no ESLint config/dependency despite the `lint` script, no CI pipeline, no E2E or visual tests, and no coverage thresholds. Keep that in mind when relying on checks; `docs/TESTING.md` lists the full gap set.
+CI runs typecheck, tests, and build on pushes and pull requests. There is no ESLint config/dependency despite the `lint` script, no E2E or visual tests, and no coverage thresholds. Keep that in mind when relying on checks; `docs/TESTING.md` lists the full gap set.
 
 ## Design rules that keep diffs reviewable
 

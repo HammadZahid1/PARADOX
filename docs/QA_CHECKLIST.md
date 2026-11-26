@@ -1,6 +1,6 @@
 # Manual QA Checklist
 
-Use this before calling a build release-ready. `npm test` runs Vitest unit tests, but there is no E2E, visual-regression, or accessibility-audit suite in this repository (`docs/TESTING.md`), so the browser pass is manual.
+Use this before calling a build release-ready. `npm test` runs Vitest unit, component, and view-level tests, but there is no E2E, visual-regression, or accessibility-audit suite in this repository (`docs/TESTING.md`), so the browser pass is manual.
 
 ## Setup and recording
 

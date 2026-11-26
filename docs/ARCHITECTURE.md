@@ -72,7 +72,7 @@ Every mutating store action increments `revision` in `src/state/store.ts`. Views
 
 ## Non-goals in this revision
 
-No server sync, no authentication, no telemetry upload, no real-time data feeds, no real-world forecasting, no CI or release pipeline in the repository, and no package split (the project is a single Vite app despite the roadmap's monorepo phases).
+No server sync, no authentication, no telemetry upload, no real-time data feeds, no real-world forecasting, no release pipeline, and no package split (the project is a single Vite app despite the roadmap's monorepo phases). CI checks are configured in `.github/workflows/ci.yml`.
 
 ## Engine subsystem inventory
 
